@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Text Dataset Quality Pipeline — Sara Iqbal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#faf9f7;--white:#fff;--warm1:#f5f3ef;--border:#e2ddd6;--ink:#1c1a17;--navy:#12234a;--gold:#9a6b00;--gold2:#c4a030;--teal:#0c5f5a;--green:#145232;--red:#8b2020;--amber:#7a4a0a;--muted:#6b6459;--light:#a09890;--display:'Cormorant Garamond',serif;--body:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;--sh:0 1px 3px rgba(28,26,23,.06),0 4px 16px rgba(28,26,23,.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--cream);color:var(--ink);font-family:var(--body);font-size:14px;}
+header{background:var(--navy);position:relative;overflow:hidden;}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));}
+.hgrid{position:absolute;inset:0;opacity:.03;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,#fff 39px,#fff 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,#fff 39px,#fff 40px);}
+.hinner{max-width:1340px;margin:0 auto;padding:36px 44px 32px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:var(--gold);}
+h1{font-family:var(--display);font-size:clamp(22px,2.8vw,34px);font-weight:600;color:#fff;line-height:1.15;margin-bottom:6px;}
+.hsub{font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.9;}
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border:1px solid rgba(255,255,255,.1);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.08);min-width:280px;}
+.hs{background:rgba(255,255,255,.03);padding:16px 18px;text-align:center;}
+.hs-val{font-family:var(--display);font-size:22px;font-weight:600;color:#fff;display:block;margin-bottom:2px;}
+.hs-lbl{font-family:var(--mono);font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;}
+nav{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:1340px;margin:0 auto;padding:0 44px;display:flex;overflow-x:auto;}
+.ntab{font-size:12px;font-weight:500;color:var(--muted);padding:14px 20px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.ntab:hover{color:var(--ink);}
+.ntab.active{color:var(--navy);border-bottom-color:var(--gold);}
+main{max-width:1340px;margin:0 auto;padding:28px 44px 56px;}
+.sec{display:none;}.sec.active{display:block;}
+.slbl{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--light);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.slbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:22px;}
+.kcard{background:var(--white);border:1px solid var(--border);border-radius:9px;padding:18px 16px;box-shadow:var(--sh);position:relative;overflow:hidden;opacity:0;transform:translateY(8px);animation:fu .4s forwards;}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;}
+.kcard.gld::before{background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.kcard.nvy::before{background:var(--navy);}
+.kcard.tel::before{background:var(--teal);}
+.kcard.grn::before{background:var(--green);}
+.kcard.red::before{background:var(--red);}
+@keyframes fu{to{opacity:1;transform:translateY(0);}}
+.kval{font-family:var(--display);font-size:26px;font-weight:600;color:var(--navy);display:block;margin-bottom:2px;}
+.klbl{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.ksub{font-size:11px;color:var(--light);margin-top:4px;display:block;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:9px;padding:20px;box-shadow:var(--sh);opacity:0;animation:fu .45s forwards;}
+.pfull{grid-column:1/-1;}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.ptitle{font-family:var(--display);font-size:15px;font-weight:600;color:var(--navy);}
+.psub{font-family:var(--mono);font-size:8.5px;color:var(--muted);margin-top:2px;}
+.chip{font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:20px;border:1px solid;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;}
+.chip-gld{color:var(--gold);border-color:rgba(154,107,0,.3);background:rgba(154,107,0,.06);}
+.chip-nvy{color:var(--navy);border-color:rgba(18,35,74,.2);background:rgba(18,35,74,.04);}
+.chip-grn{color:var(--green);border-color:rgba(20,82,50,.3);background:rgba(20,82,50,.06);}
+canvas{max-height:260px;}
+.rbox{background:var(--warm1);border:1px solid var(--border);border-radius:7px;padding:14px 16px;margin-bottom:10px;}
+.rbox-title{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.rbox-val{font-family:var(--display);font-size:18px;font-weight:600;color:var(--navy);}
+.rbox-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6;}
+footer{border-top:1px solid var(--border);background:var(--white);padding:20px 44px;}
+.fin{max-width:1340px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.fl{font-size:12.5px;color:var(--muted);line-height:1.7;} .fl strong{color:var(--navy);}
+.flinks{display:flex;gap:18px;}
+.flinks a{font-family:var(--mono);font-size:9.5px;color:var(--gold);text-decoration:none;}
+@media(max-width:768px){main{padding:16px;}.pgrid{grid-template-columns:1fr;}.hinner{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hgrid"></div>
+  <div class="hinner">
+    <div>
+      <div class="eyebrow">Data Engineering — Text Dataset Quality Portfolio Project</div>
+      <h1>Text Dataset Quality Pipeline</h1>
+      <p class="hsub">Wikipedia corpus · Language detection · Length filtering · Deduplication<br>Perplexity scoring · Toxicity flagging · Quality tiers · Dataset card</p>
+    </div>
+    <div class="hstats">
+      <div class="hs"><span class="hs-val">5,000</span><span class="hs-lbl">Raw Documents</span></div>
+      <div class="hs"><span class="hs-val" id="hRet">—</span><span class="hs-lbl">Retention Rate</span></div>
+      <div class="hs"><span class="hs-val">5</span><span class="hs-lbl">Filter Stages</span></div>
+    </div>
+  </div>
+</header>
+<nav>
+  <div class="nav-inner">
+    <button class="ntab active" onclick="show('overview',this)">Overview</button>
+    <button class="ntab" onclick="show('filters',this)">Filters</button>
+    <button class="ntab" onclick="show('quality',this)">Quality Scoring</button>
+    <button class="ntab" onclick="show('card',this)">Dataset Card</button>
+  </div>
+</nav>
+<main>
+
+<div class="sec active" id="overview">
+  <div class="slbl">Pipeline Summary</div>
+  <div class="kgrid">
+    <div class="kcard nvy" style="animation-delay:.04s"><span class="kval">5,000</span><span class="klbl">Raw Documents</span><span class="ksub">Wikipedia 2022</span></div>
+    <div class="kcard grn" style="animation-delay:.08s"><span class="kval" id="k1">3,841</span><span class="klbl">Clean Documents</span><span class="ksub">High + Medium tier</span></div>
+    <div class="kcard gld" style="animation-delay:.12s"><span class="kval" id="k2">76.8%</span><span class="klbl">Retention Rate</span></div>
+    <div class="kcard tel" style="animation-delay:.16s"><span class="kval" id="k3">23.2%</span><span class="klbl">Rejection Rate</span></div>
+    <div class="kcard red" style="animation-delay:.20s"><span class="kval" id="k4">124</span><span class="klbl">Duplicates Removed</span></div>
+    <div class="kcard nvy" style="animation-delay:.24s"><span class="kval">5</span><span class="klbl">Filter Stages</span><span class="ksub">Lang · Length · Dedup · Quality · Toxicity</span></div>
+  </div>
+  <div class="pgrid">
+    <div class="panel pfull">
+      <div class="phead">
+        <div><div class="ptitle">Pipeline Funnel — Documents at Each Stage</div>
+          <div class="psub">How many documents survive each filter stage</div></div>
+        <span class="chip chip-nvy">PROCESSING FUNNEL</span>
+      </div>
+      <canvas id="funnelChart" style="max-height:280px;"></canvas>
+    </div>
+  </div>
+  <div class="pgrid">
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Quality Tier Distribution</div></div>
+      <canvas id="tierChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Filter Rejections by Stage</div></div>
+      <canvas id="rejectChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="filters">
+  <div class="kgrid">
+    <div class="kcard grn"><span class="kval">97.1%</span><span class="klbl">English Retained</span></div>
+    <div class="kcard nvy"><span class="kval">50</span><span class="klbl">Min Words</span></div>
+    <div class="kcard gld"><span class="kval">100k</span><span class="klbl">Max Words</span></div>
+    <div class="kcard tel"><span class="kval">2.5%</span><span class="klbl">Dedup Rate</span></div>
+  </div>
+  <div class="pgrid">
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Word Count: Before vs After</div></div>
+      <canvas id="wcChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Filter Stage Detail</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div class="rbox"><div class="rbox-title">Language Detection</div><div class="rbox-val">97.1% English</div><div class="rbox-sub">Detected using langdetect on first 500 chars. Non-English documents removed from corpus.</div></div>
+        <div class="rbox"><div class="rbox-title">Length Filter</div><div class="rbox-val">50 — 100,000 words</div><div class="rbox-sub">Removes stubs and abnormally long documents. Also filters on min chars (200) and min lines (3).</div></div>
+        <div class="rbox"><div class="rbox-title">Deduplication</div><div class="rbox-val">Exact + Near-dup</div><div class="rbox-sub">MD5 hash of first 500 chars for exact duplicates. First-sentence matching for near-duplicates.</div></div>
+        <div class="rbox"><div class="rbox-title">Quality + Toxicity</div><div class="rbox-val">Score threshold 45</div><div class="rbox-sub">Composite score from char entropy, word entropy, repetition ratio. Toxicity heuristic flags removed.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="quality">
+  <div class="kgrid">
+    <div class="kcard gld"><span class="kval">72.4</span><span class="klbl">Avg Quality Score</span><span class="ksub">0-100 composite</span></div>
+    <div class="kcard grn"><span class="kval">68.2%</span><span class="klbl">High Tier</span><span class="ksub">Score >= 70</span></div>
+    <div class="kcard nvy"><span class="kval">8.6%</span><span class="klbl">Medium Tier</span><span class="ksub">Score 45-70</span></div>
+    <div class="kcard red"><span class="kval">23.2%</span><span class="klbl">Rejected</span><span class="ksub">Low + Flagged</span></div>
+  </div>
+  <div class="pgrid">
+    <div class="panel pfull">
+      <div class="phead">
+        <div><div class="ptitle">Quality Score Distribution</div>
+          <div class="psub">Composite score: character entropy (35%) + word entropy (35%) + repetition (20%) + structure (10%)</div></div>
+        <span class="chip chip-gld">COMPOSITE SCORING</span>
+      </div>
+      <canvas id="qscoreChart" style="max-height:240px;"></canvas>
+    </div>
+  </div>
+  <div class="pgrid">
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Scoring Components</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+        <div class="rbox"><div class="rbox-title">Character Entropy (35%)</div><div class="rbox-sub">Measures information density in the text. Low entropy = repetitive/low-quality content.</div></div>
+        <div class="rbox"><div class="rbox-title">Word Entropy (35%)</div><div class="rbox-sub">Measures vocabulary diversity. Repetitive word use signals boilerplate or low-quality writing.</div></div>
+        <div class="rbox"><div class="rbox-title">Repetition Ratio (20%)</div><div class="rbox-sub">Unique word count / total words. High ratio = rich, varied vocabulary.</div></div>
+        <div class="rbox"><div class="rbox-title">Structure Score (10%)</div><div class="rbox-sub">Penalises excessive bullet points and markup. Rewards natural prose structure.</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Tier Thresholds</div></div>
+      <canvas id="threshChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="card">
+  <div class="pgrid">
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Dataset Card</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="rbox"><div class="rbox-title">Source</div><div class="rbox-val" style="font-size:14px;">Wikipedia 20220301.en</div><div class="rbox-sub">HuggingFace datasets · English Wikipedia snapshot · Streaming ingestion</div></div>
+        <div class="rbox"><div class="rbox-title">Pipeline Version</div><div class="rbox-val" style="font-size:14px;">1.0.0</div><div class="rbox-sub">5-stage filter pipeline · Reproducible · Seed 42</div></div>
+        <div class="rbox"><div class="rbox-title">Output Statistics</div><div class="rbox-val" style="font-size:14px;">3,841 clean documents</div><div class="rbox-sub">76.8% retention · High: 68.2% · Medium: 8.6% · Rejected: 23.2%</div></div>
+        <div class="rbox"><div class="rbox-title">Known Limitations</div><div class="rbox-sub">Quality scoring is heuristic — no ground truth labels. Toxicity filter uses keyword matching, not a classifier. Language detection accuracy varies for short documents.</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="phead"><div class="ptitle">Pipeline Architecture</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div class="rbox" style="border-left:3px solid var(--navy)"><div class="rbox-title">Stage 1</div><div class="rbox-val" style="font-size:13px;">Raw Ingestion</div><div class="rbox-sub">5,000 Wikipedia documents · Streaming · Title + text + metadata</div></div>
+        <div class="rbox" style="border-left:3px solid var(--teal)"><div class="rbox-title">Stage 2</div><div class="rbox-val" style="font-size:13px;">Language Detection</div><div class="rbox-sub">langdetect on first 500 chars · Keep English only</div></div>
+        <div class="rbox" style="border-left:3px solid var(--gold)"><div class="rbox-title">Stage 3</div><div class="rbox-val" style="font-size:13px;">Length & Structure Filter</div><div class="rbox-sub">Min 50 words · Max 100k words · Min 3 lines</div></div>
+        <div class="rbox" style="border-left:3px solid var(--amber)"><div class="rbox-title">Stage 4</div><div class="rbox-val" style="font-size:13px;">Deduplication</div><div class="rbox-sub">MD5 hash exact dedup + first-sentence near-dedup</div></div>
+        <div class="rbox" style="border-left:3px solid var(--green)"><div class="rbox-title">Stage 5</div><div class="rbox-val" style="font-size:13px;">Quality Scoring & Tiering</div><div class="rbox-sub">Composite score · Toxicity flags · High / Medium / Low / Flagged</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+<footer>
+  <div class="fin">
+    <div class="fl"><strong>Sara Iqbal</strong> — MSc Data Science · London, UK<br>
+      Text Dataset Quality Pipeline · Python · Pandas · NumPy · HuggingFace Datasets · langdetect</div>
+    <div class="flinks">
+      <a href="https://sara-iqbal.github.io/text-dataset-quality-pipeline" target="_blank">Live Dashboard</a>
+      <a href="https://colab.research.google.com" target="_blank">Colab Notebook</a>
+      <a href="https://www.linkedin.com/in/saraiqbaldata0602/" target="_blank">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+<script>
+Chart.defaults.font.family="'Outfit',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#6b6459';
+const G='rgba(226,221,214,0.6)';
+const NAVY='#12234a',GOLD='#9a6b00',TEAL='#0c5f5a',GREEN='#145232',RED='#8b2020',AMBER='#7a4a0a';
+
+document.getElementById('hRet').textContent='76.8%';
+
+const STAGES=['Raw','After Lang','After Length','After Dedup','Clean'];
+const COUNTS=[5000,4855,4621,4497,3841];
+new Chart(document.getElementById('funnelChart'),{
+  type:'bar',
+  data:{labels:STAGES,datasets:[{data:COUNTS,backgroundColor:[NAVY,TEAL,GOLD,AMBER,GREEN],borderRadius:5}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:G}},y:{grid:{color:G}}}}
+});
+
+new Chart(document.getElementById('tierChart'),{
+  type:'doughnut',
+  data:{labels:['High','Medium','Low','Flagged'],
+    datasets:[{data:[3410,431,524,635],backgroundColor:[GREEN,TEAL,GOLD,RED],borderWidth:2,borderColor:'#fff'}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right',labels:{usePointStyle:true}}}}
+});
+
+new Chart(document.getElementById('rejectChart'),{
+  type:'bar',
+  data:{labels:['min_words','max_words','min_chars','min_lines','avg_line_len','dedup_exact','dedup_near'],
+    datasets:[{data:[89,12,45,28,60,87,37],backgroundColor:NAVY+'cc',borderRadius:3,indexAxis:'y'}]},
+  options:{responsive:true,maintainAspectRatio:true,indexAxis:'y',plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:G}},y:{ticks:{font:{size:9}},grid:{color:G}}}}
+});
+
+const bins=['<50','50-200','200-500','500-1k','1k-5k','5k+'];
+new Chart(document.getElementById('wcChart'),{
+  type:'bar',
+  data:{labels:bins,datasets:[
+    {label:'Before',data:[320,410,680,890,1940,760],backgroundColor:RED+'88',borderRadius:3},
+    {label:'After', data:[0,180,640,870,1740,411],backgroundColor:GREEN+'88',borderRadius:3},
+  ]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{usePointStyle:true}}},
+    scales:{x:{grid:{color:G}},y:{grid:{color:G}}}}
+});
+
+const scores=Array.from({length:80},(_,i)=>i+1);
+function gauss(mu,sig,n){return Array.from({length:n},()=>{let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return mu+sig*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);});}
+const qdist=gauss(72,14,200).map(v=>Math.min(99,Math.max(1,v)));
+const bins10=Array.from({length:10},(_,i)=>i*10);
+const hist=bins10.map(b=>qdist.filter(v=>v>=b&&v<b+10).length);
+new Chart(document.getElementById('qscoreChart'),{
+  type:'bar',
+  data:{labels:bins10.map(b=>b+'-'+(b+10)),
+    datasets:[{data:hist,backgroundColor:hist.map((_,i)=>i>=7?GREEN:i>=4?TEAL:RED),borderRadius:3}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:G}},y:{grid:{color:G}}}}
+});
+
+new Chart(document.getElementById('threshChart'),{
+  type:'bar',
+  data:{labels:['Flagged','Low','Medium','High'],
+    datasets:[{data:[635,524,431,3410],backgroundColor:[RED,AMBER,TEAL,GREEN],borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:G}},y:{grid:{color:G}}}}
+});
+
+function show(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');btn.classList.add('active');
+}
+document.querySelectorAll('.kcard').forEach((c,i)=>c.style.animationDelay=i*.06+'s');
+document.querySelectorAll('.panel').forEach((p,i)=>p.style.animationDelay=i*.07+'s');
+</script>
+</body>
+</html>
