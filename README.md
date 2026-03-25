@@ -1,4 +1,3 @@
-# Text-Dataset-Quality-Pipeline
 # Text Dataset Quality Pipeline
 
 This project implements a production-grade data engineering pipeline designed to refine raw web text into high-quality datasets suitable for machine learning and language model pretraining. It replicates the workflows used by data teams to filter out noise, boilerplate, and low-quality content from massive public corpora.
